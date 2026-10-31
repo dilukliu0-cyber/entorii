@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entorii — макет</title>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --label:#1C1C1E; --label2:#8E8E93; --line:#1C1C1E; --grid:#E5E5EA; --gridStrong:#C7C7CC; --dot:#3A3A3C; --edit:#007AFF; --red:#FF3B30;
+  --sheet:#F2F2F7; --on:#FFFFFF; --off:#E3E3E8; --offText:#AEAEB2; --dim:#0006;
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --label:#F2F2F7; --label2:#8E8E93; --line:#F2F2F7; --grid:#3A3A3C; --gridStrong:#5A5A5E; --dot:#D1D1D6; --edit:#0A84FF; --red:#FF453A;
+  --sheet:#1C1C1E; --on:#3A3A3C; --off:#26262A; --offText:#77777C; --dim:#000a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#d8d8dc;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;overflow:hidden}
+:root[data-theme="dark"] body{background:#2a2a2c}
+button{font-family:inherit}
+
+.hint{position:fixed;top:12px;left:50%;transform:translateX(-50%);font:500 13px -apple-system,sans-serif;color:#636366;white-space:nowrap}
+.device{width:1194px;height:834px;background:var(--bg);border-radius:28px;overflow:hidden;box-shadow:0 0 0 12px #1c1c1e,0 20px 60px #0005;transition:background .35s}
+
+/* ===== главный экран ===== */
+.app{position:absolute;inset:0;display:grid;grid-template-columns:200px 1fr;grid-template-rows:auto 1fr;gap:24px;padding:32px}
+.app.left{grid-template-columns:1fr 200px}
+.free{grid-row:1/3;position:relative}
+.app.left .free{grid-column:2}
+.app.left .top,.app.left .field{grid-column:1}
+.app.left .top{margin-left:56px}
+.top{display:flex;gap:16px;align-items:stretch;height:120px}
+.indicator{width:84px;display:grid;place-items:center;font:600 60px "Klee One","Hiragino Mincho ProN",serif;color:var(--label)}
+.indicator span{display:inline-block;transition:transform .35s cubic-bezier(.3,1.4,.5,1),opacity .2s}
+.box{flex:1;display:grid;place-items:center;position:relative;overflow:hidden;border:2px solid var(--line);border-radius:18px}
+.romaji{font:600 48px ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;letter-spacing:.06em;color:var(--label);transition:opacity .25s,transform .25s;white-space:nowrap}
+.answer{font:600 56px "Klee One","Hiragino Mincho ProN",serif;color:var(--label);transition:opacity .5s,filter .6s,transform .5s;white-space:nowrap}
+.answer.hidden{opacity:0;filter:blur(14px);transform:scale(.96)}
+canvas.spoiler{position:absolute;inset:0;width:100%;height:100%}
+.field{border:3px solid var(--line);border-radius:22px;position:relative;overflow:hidden}
+.field canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.field .ink{transition:opacity .35s, filter .35s}
+.field .ink.clearing{opacity:0;filter:blur(6px)}
+.gear{position:absolute;top:32px;left:32px;z-index:3;width:44px;height:44px;border:0;background:none;padding:0;display:grid;place-items:center;color:var(--label);cursor:pointer;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.gear:active{transform:scale(.85)}
+
+.float{position:absolute;touch-action:none;user-select:none;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.float.press{transform:scale(.88)}
+.float.edit{outline:2px dashed var(--edit);outline-offset:8px;border-radius:50%;animation:wig .5s ease-in-out infinite;cursor:grab;z-index:5}
+.float.sticker.edit{border-radius:14px}
+.float.moving{animation:none;transform:scale(1.06);filter:drop-shadow(0 10px 18px #0004);cursor:grabbing}
+.float.appear{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes wig{0%,100%{rotate:-1.5deg}50%{rotate:1.5deg}}
+@keyframes pop{from{transform:scale(.2);opacity:0}}
+.handle{position:absolute;right:-18px;bottom:-18px;width:26px;height:26px;border-radius:50%;background:var(--edit);border:3px solid var(--bg);display:none;cursor:nwse-resize;touch-action:none}
+.handle::after{content:"";position:absolute;inset:6px;border-right:2px solid #fff;border-bottom:2px solid #fff;border-radius:0 0 3px 0}
+.float.edit .handle{display:block}
+.round svg{width:100%;height:100%;overflow:visible;display:block}
+.round .ring{fill:none;stroke:var(--line);stroke-width:3.5}
+.round .fill{fill:var(--line);transform-origin:50px 50px;transform:scale(0);transition:transform .45s cubic-bezier(.3,1.4,.5,1)}
+.circle.full .fill{transform:scale(1)}
+.tool .icons{position:absolute;inset:3px;border-radius:50%;overflow:hidden}
+.tool .slot{position:absolute;inset:0;display:grid;place-items:center;transition:transform .42s cubic-bezier(.5,0,.3,1.3),opacity .3s}
+.tool .slot svg{width:46%;height:46%;color:var(--label)}
+.tool .out{transform:translateY(110%);opacity:0}
+.tool .in{transform:translateY(-110%);opacity:0}
+.sticker img{width:100%;height:100%;object-fit:contain;pointer-events:none;display:block}
+.done{position:absolute;bottom:0;left:50%;transform:translateX(-50%);border:0;background:var(--edit);color:#fff;font:600 15px -apple-system,sans-serif;padding:9px 18px;border-radius:99px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s;z-index:6}
+.free.editing .done{opacity:1;pointer-events:auto}
+
+/* ===== настройки ===== */
+.scrim{position:absolute;inset:0;background:var(--dim);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:50%;top:50%;width:940px;height:740px;margin:-370px 0 0 -470px;background:var(--sheet);border-radius:24px;z-index:21;display:flex;flex-direction:column;transform:translateY(900px);transition:transform .45s cubic-bezier(.2,.9,.25,1),background .35s;box-shadow:0 20px 60px #0004}
+.sheet.show{transform:none}
+.sheet header{display:flex;align-items:center;justify-content:center;height:60px;position:relative;flex:none}
+.sheet header h1{margin:0;font:600 17px -apple-system,sans-serif;color:var(--label)}
+.sheet header .ok{position:absolute;right:16px;top:12px;border:0;background:none;color:var(--edit);font:600 17px -apple-system,sans-serif;padding:6px 8px;cursor:pointer}
+.cols{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:4px 28px 24px;overflow:auto}
+.sec{margin-bottom:22px}
+.sec h2{margin:0 0 8px 14px;font:400 13px -apple-system,sans-serif;color:var(--label2);text-transform:uppercase;letter-spacing:.02em}
+.sec h2 b{font:600 15px "Klee One",serif;color:var(--label);text-transform:none;margin-left:4px}
+.group{background:var(--on);border-radius:12px;overflow:hidden;transition:background .35s}
+
+.seg{display:flex;background:var(--off);border-radius:10px;padding:3px;gap:3px;transition:background .35s}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:9px 0;font:500 15px -apple-system,sans-serif;color:var(--label);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .25s,box-shadow .25s}
+.seg button.on{background:var(--on);box-shadow:0 2px 6px #0002}
+.seg svg{width:18px;height:18px}
+
+.cats{display:flex;flex-direction:column;gap:6px}
+.cat{display:flex;align-items:center;gap:12px;border:0;width:100%;text-align:left;padding:11px 14px;border-radius:12px;background:var(--off);cursor:pointer;transition:background .25s,transform .2s cubic-bezier(.3,1.6,.5,1)}
+.cat:active{transform:scale(.98)}
+.cat .t{flex:1;min-width:0}
+.cat .n{font:600 16px -apple-system,sans-serif;color:var(--offText);transition:color .25s}
+.cat .d{font:400 12px -apple-system,sans-serif;color:var(--offText);margin-top:1px}
+.cat .k{font:600 20px "Klee One",serif;color:var(--offText);transition:color .25s;white-space:nowrap}
+.cat .chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--offText);flex:none;display:grid;place-items:center;transition:.25s}
+.cat .chk svg{width:12px;height:12px;opacity:0;transition:.2s;color:#fff}
+.cat.on{background:var(--on);box-shadow:0 1px 2px #0000000d}
+.cat.on .n,.cat.on .k{color:var(--label)} .cat.on .d{color:var(--label2)}
+.cat.on .chk{background:var(--label);border-color:var(--label)} .cat.on .chk svg{opacity:1;color:var(--bg)}
+.cat.locked{opacity:.45;cursor:default}
+.cat.locked:active{transform:none}
+.cat.shake{animation:shake .4s}
+@keyframes shake{20%{translate:-6px}40%{translate:5px}60%{translate:-3px}80%{translate:2px}}
+
+.grids{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gopt{border:0;background:none;padding:0;cursor:pointer;text-align:center;font:500 12px -apple-system,sans-serif;color:var(--label2)}
+.gopt canvas{width:100%;aspect-ratio:1;border-radius:12px;background:var(--bg);display:block;margin-bottom:6px;box-shadow:inset 0 0 0 2px transparent;transition:box-shadow .2s,background .35s}
+.gopt.on canvas{box-shadow:inset 0 0 0 2.5px var(--label)}
+.gopt.on{color:var(--label)}
+
+.stickers{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:12px}
+.stk{position:relative;aspect-ratio:1;border-radius:12px;background:var(--sheet);display:grid;place-items:center;transition:background .35s}
+.stk img{width:80%;height:80%;object-fit:contain}
+.stk .x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--label2);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+.stk.add{border:2px dashed var(--gridStrong);background:none;cursor:pointer;color:var(--label2);font-size:28px;font-weight:300}
+.empty{padding:2px 14px 12px;font:400 13px -apple-system,sans-serif;color:var(--label2)}
+.row-btn{display:block;width:100%;border:0;background:var(--on);text-align:center;padding:13px;font:400 16px -apple-system,sans-serif;color:var(--red);cursor:pointer;border-top:.5px solid var(--grid)}
+.row-btn:disabled{color:var(--offText);cursor:default}
+.reset{border-radius:12px;border:0}
+.about{display:flex;align-items:center;gap:14px;padding:6px 14px}
+.about .ico{width:56px;height:56px;border-radius:13px;flex:none;background:var(--off) url(entorii-icon-1024.png) center/cover}
+.about b{display:block;font:600 17px -apple-system,sans-serif;color:var(--label)}
+.about span{font:400 13px -apple-system,sans-serif;color:var(--label2)}
+
+/* алерт */
+.alert-wrap{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:#0003;opacity:0;pointer-events:none;transition:opacity .2s}
+.alert-wrap.show{opacity:1;pointer-events:auto}
+.alert{width:280px;border-radius:14px;background:color-mix(in srgb,var(--sheet) 94%,transparent);backdrop-filter:blur(20px);text-align:center;overflow:hidden;transform:scale(1.15);transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.alert-wrap.show .alert{transform:none}
+.alert .msg{padding:18px 16px 16px}
+.alert b{display:block;font:600 17px -apple-system,sans-serif;color:var(--label);margin-bottom:4px}
+.alert span{font:400 13px -apple-system,sans-serif;color:var(--label)}
+.alert .btns{display:flex;border-top:.5px solid var(--gridStrong)}
+.alert .btns button{flex:1;border:0;background:none;padding:12px;font:400 17px -apple-system,sans-serif;color:var(--edit);cursor:pointer}
+.alert .btns button+button{border-left:.5px solid var(--gridStrong);font-weight:600;color:var(--red)}
+</style>
+</head>
+<body>
+<div class="hint">Шестерёнка — настройки · долгое нажатие на кнопку или стикер — двигать и менять размер</div>
+<div class="device" id="device">
+  <div class="app" id="app">
+    <button class="gear" id="gear" aria-label="Настройки">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.6h4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+    </button>
+    <div class="free" id="free">
+      <div class="float round circle" id="circle" data-key="circle">
+        <svg viewBox="0 0 100 100"><circle class="fill" cx="50" cy="50" r="48.25"/><circle class="ring" cx="50" cy="50" r="48.25"/></svg>
+        <div class="handle"></div>
+      </div>
+      <div class="float round tool" id="tool" data-key="tool">
+        <svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="48.25"/></svg>
+        <div class="icons"><div class="slot" id="slotA"></div><div class="slot in" id="slotB"></div></div>
+        <div class="handle"></div>
+      </div>
+      <button class="done" id="done">Готово</button>
+    </div>
+    <div class="top">
+      <div class="indicator"><span id="ind">あ</span></div>
+      <div class="box"><div class="romaji" id="romaji"></div></div>
+      <div class="box"><div class="answer hidden" id="answer"></div><canvas class="spoiler" id="spoiler"></canvas></div>
+    </div>
+    <div class="field" id="field">
+      <canvas id="bg"></canvas>
+      <canvas class="ink" id="ink"></canvas>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet">
+    <header><h1>Настройки</h1><button class="ok" id="ok">Готово</button></header>
+    <div class="cols">
+      <div>
+        <div class="sec"><h2>Тема</h2>
+          <div class="seg" id="segTheme">
+            <button data-v="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Светлая</button>
+            <button data-v="dark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>Тёмная</button>
+          </div>
+        </div>
+        <div class="sec"><h2>Рука</h2>
+          <div class="seg" id="segHand"><button data-v="right">Правша</button><button data-v="left">Левша</button></div>
+        </div>
+        <div class="sec"><h2>Разметка поля</h2><div class="grids" id="grids"></div></div>
+        <div class="sec"><h2>Стикеры</h2>
+          <div class="group"><div class="stickers" id="stkList"></div><div class="empty" id="stkEmpty">Добавьте картинку из «Фото» — она появится в свободной зоне.</div>
+            <button class="row-btn" id="delAll">Удалить все стикеры</button></div>
+          <input type="file" id="file" accept="image/*" hidden>
+        </div>
+        <div class="sec"><button class="row-btn reset" id="reset">Сбросить настройки</button></div>
+        <div class="about">
+          <div class="ico" id="appIcon"></div>
+          <div><b>Entorii</b><span>円鳥居 · без аккаунта, без сети, без статистики</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec"><h2>Хирагана<b>あ</b></h2><div class="cats" id="catsH"></div></div>
+        <div class="sec"><h2>Катакана<b>ア</b></h2><div class="cats" id="catsK"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-wrap" id="alertWrap"><div class="alert"><div class="msg"><b id="aT"></b><span id="aM"></span></div><div class="btns"><button id="aNo">Отмена</button><button id="aYes"></button></div></div></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const root=document.documentElement, app=$('app'), device=$('device');
+const css=v=>getComputedStyle(root).getPropertyValue(v).trim();
+
+function fit(){const s=Math.min((innerWidth-40)/1218,(innerHeight-70)/858,1);device.style.position='absolute';device.style.left='50%';device.style.top='calc(50% + 18px)';device.style.transform=`translate(-50%,-50%) scale(${s})`;fit.s=s}
+addEventListener('resize',fit);fit();
+
+/* ===== слова и единицы ===== */
+const toH=c=>{const n=c.codePointAt(0);return n>=0x30A1&&n<=0x30F6?String.fromCodePoint(n-0x60):c};
+const SMALL_Y='ゃゅょャュョ', SMALL_V='ぁぃぅぇぉァィゥェォ', YOON_BASE='きしちにひみりぎじびぴぢ';
+const DAK='がぎぐげござじずぜぞだぢづでどばびぶべぼ', HANDAK='ぱぴぷぺぽ', RARE='ゐゑ';
+function units(word,alph){
+  const ch=[...word], out=[];
+  for(let i=0;i<ch.length;i++){
+    const c=ch[i], n=ch[i+1]||'#', h=toH(c);
+    if(SMALL_Y.includes(n)&&YOON_BASE.includes(h)){out.push({u:c+n,cat:'Yoon',w:2});i++;continue}
+    if(alph==='k'&&(SMALL_V.includes(n)||SMALL_Y.includes(n))&&!SMALL_V.includes(c)){out.push({u:c+n,cat:'Special',w:1});i++;continue}
+    if(c==='ヴ'){out.push({u:c,cat:'Special',w:1});continue}
+    if(c==='ー'){out.push({u:c,cat:'Long',w:3});continue}
+    if(h==='っ'){out.push({u:c,cat:'Small',w:4});continue}
+    if(SMALL_V.includes(c)){out.push({u:c,cat:'Small',w:2});continue}
+    if(RARE.includes(h)){out.push({u:c,cat:'Rare',w:1});continue}
+    if(HANDAK.includes(h)){out.push({u:c,cat:'Dakuten',w:2});continue}
+    if(DAK.includes(h)){out.push({u:c,cat:'Dakuten',w:3});continue}
+    out.push({u:c,cat:'Basic',w:'やゆよわを'.includes(h)?3:4});
+  }
+  return out;
+}
+const RAW_H=`KAWA かわ|SAKURA さくら|NEKO ねこ|INU いぬ|YAMA やま|SORA そら|HANA はな|HOSHI ほし|UMI うみ|AME あめ|YUKI ゆき|MORI もり|HEYA へや|FUNE ふね|TSUKUE つくえ|WATASHI わたし|CHIKARA ちから|TENKI てんき|SENAKA せなか|KEMURI けむり|YORU よる|REKISHI れきし|NUNO ぬの|ROUSOKU ろうそく|KAZE かぜ|HIZA ひざ|DENWA でんわ|BARA ばら|ENPITSU えんぴつ|PIYOPIYO ぴよぴよ|GOHAN ごはん|BUTA ぶた|DOKO どこ|JIKAN じかん|POSUTO ぽすと|KYOU きょう|SHASHIN しゃしん|CHAIRO ちゃいろ|RYOKOU りょこう|HYAKU ひゃく|MYAKU みゃく|NYUUGAKU にゅうがく|KITTE きって|NEKKO ねっこ|HAKKIRI はっきり|ASSARI あっさり|CHOTTO ちょっと|GAKKOU がっこう|IPPAI いっぱい|WIRU ゐる|KOWE こゑ|WINAKA ゐなか|WEMU ゑむ|WIDO ゐど`;
+const RAW_K=`KAMERA カメラ|HOTERU ホテル|TOMATO トマト|NAIFU ナイフ|MIRUKU ミルク|AISU アイス|MEMO メモ|HAMU ハム|TENISU テニス|KURASU クラス|MASUKU マスク|WAIN ワイン|NEKUTAI ネクタイ|BASU バス|DOA ドア|PIANO ピアノ|GAMU ガム|BENCHI ベンチ|PAN パン|ZUBON ズボン|SHATSU シャツ|CHOKO チョコ|KYANPU キャンプ|ROKETTO ロケット|YOTTO ヨット|MATCHI マッチ|BEDDO ベッド|POKETTO ポケット|KOOHII コーヒー|KEEKI ケーキ|NOOTO ノート|SUKII スキー|SEETAA セーター|RUURU ルール|MEERU メール|BIIRU ビール|NYUUSU ニュース|MENYUU メニュー|JUUSU ジュース|FIRUMU フィルム|FAIRU ファイル|FOOKU フォーク|WEBU ウェブ|WIKI ウィキ|TII ティー|DISUKO ディスコ|TUNA トゥナ|DUUMU ドゥーム|VAIORIN ヴァイオリン|SHEFU シェフ|JETTO ジェット|CHEKKU チェック|FERII フェリー|WISUKII ヰスキー|YEBISU ヱビス|WEHOBA ヱホバ`;
+const parse=(raw,a)=>raw.split('|').map(s=>{const [r,k]=s.split(' ');const us=units(k,a);return{r,k,a,us,cats:new Set(us.map(x=>x.cat))}});
+const WORDS=[...parse(RAW_H,'h'),...parse(RAW_K,'k')];
+
+/* ===== настройки ===== */
+const CATS={
+  h:[['Basic','базовые 46','あ か さ'],['Dakuten','дакутэн и хандакутэн','が ぱ'],['Yoon','с маленькими ゃゅょ','きゃ しゅ'],['Small','маленькие ぁぃぅぇぉ и っ','っ ぁ'],['Rare','устаревшие','ゐ ゑ']],
+  k:[['Basic','базовые 46','ア カ サ'],['Dakuten','дакутэн и хандакутэн','ガ パ'],['Yoon','с маленькими ャュョ','キャ シュ'],['Small','маленькие ァィゥェォ и ッ','ッ ァ'],['Long','долгота','ー'],['Special','для заимствований','ファ ティ ヴ'],['Rare','устаревшие','ヰ ヱ']]
+};
+const DEF={theme:'light',hand:'right',grid:'clean',h:['Basic'],k:[]};
+let S=JSON.parse(JSON.stringify(DEF)); S.h=new Set(S.h); S.k=new Set(S.k);
+
+/* ===== выдача слов: веса, счётчики сессии, окно повторов ===== */
+const counts=new Map(); let recent=[], cur=null;
+function allowedWords(){
+  // азбука активна, только если включён её Basic; допуск строгий — все единицы из включённых категорий
+  const on=a=>S[a].has('Basic')?S[a]:new Set();
+  return WORDS.filter(w=>[...w.cats].every(c=>on(w.a).has(c)));
+}
+const wordWeight=w=>w.us.reduce((s,x)=>s+x.w/(1+(counts.get(x.u)||0)),0)/w.us.length;
+function nextWord(){
+  const all=allowedWords(); if(!all.length) return;
+  const win=all.length<6?1:5, block=recent.slice(-win);
+  let pool=all.filter(w=>!block.includes(w)); if(!pool.length) pool=all.filter(w=>w!==cur); if(!pool.length) pool=all;
+  const ws=pool.map(wordWeight), tot=ws.reduce((a,b)=>a+b,0); let r=Math.random()*tot, i=0;
+  while(r>ws[i]&&i<pool.length-1){r-=ws[i];i++}
+  cur=pool[i]; recent.push(cur); if(recent.length>5) recent.shift();
+  for(const x of cur.us) counts.set(x.u,(counts.get(x.u)||0)+1);
+}
+
+/* ===== спойлер ===== */
+const sp=$('spoiler'), sc=sp.getContext('2d'), spoiler={}; let parts=[], revealed=false, spAlpha=1;
+function initSpoiler(){
+  const d=devicePixelRatio||1, w=sp.offsetWidth, h=sp.offsetHeight;
+  sp.width=w*d; sp.height=h*d; sc.setTransform(d,0,0,d,0,0); parts=[];
+  for(let i=0;i<180;i++) parts.push({x:w*.12+Math.random()*w*.76,y:h*.25+Math.random()*h*.5,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.3+.5,a:Math.random()});
+  spoiler.w=w;spoiler.h=h;
+}
+function drawSpoiler(){
+  const {w,h}=spoiler; sc.clearRect(0,0,w,h);
+  spAlpha+=((revealed?0:1)-spAlpha)*.08;
+  if(spAlpha>.01){
+    sc.fillStyle=css('--dot');
+    for(const p of parts){
+      const k=revealed?1+(1-spAlpha)*6:1;
+      p.x+=p.vx*k;p.y+=p.vy*k;
+      if(!revealed){ if(p.x<w*.1||p.x>w*.9)p.vx*=-1; if(p.y<h*.22||p.y>h*.78)p.vy*=-1; }
+      p.a=Math.max(.15,Math.min(1,p.a+(Math.random()-.5)*.08));
+      sc.globalAlpha=p.a*spAlpha; sc.beginPath();sc.arc(p.x,p.y,p.r,0,7);sc.fill();
+    }
+    sc.globalAlpha=1;
+  }
+  requestAnimationFrame(drawSpoiler);
+}
+
+/* ===== разметка ===== */
+const GRIDS=[['clean','чистая'],['dots','в точку'],['squares','в клетку'],['genko','для каны']];
+function paintGrid(ctx,w,h,kind,k=1){
+  ctx.clearRect(0,0,w,h);
+  if(kind==='dots'){ctx.fillStyle=css('--gridStrong');const st=28*k;for(let x=st*.85;x<w;x+=st)for(let y=st*.85;y<h;y+=st){ctx.beginPath();ctx.arc(x,y,1.6*Math.max(k,.7),0,7);ctx.fill()}}
+  if(kind==='squares'){ctx.strokeStyle=css('--grid');ctx.lineWidth=1;const st=32*k;for(let x=.5;x<w;x+=st){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}for(let y=.5;y<h;y+=st){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}}
+  if(kind==='genko'){
+    const s=150*k, pad=6*k, cols=Math.max(1,Math.floor((w-40*k)/s)), rows=Math.max(1,Math.floor((h-40*k)/s)), ox=(w-cols*s)/2, oy=(h-rows*s)/2;
+    ctx.strokeStyle=css('--gridStrong');ctx.lineWidth=1.5;ctx.setLineDash([]);
+    for(let i=0;i<cols;i++)for(let j=0;j<rows;j++)ctx.strokeRect(ox+i*s+pad,oy+j*s+pad,s-2*pad,s-2*pad);
+    ctx.strokeStyle=css('--grid');ctx.lineWidth=1.2;ctx.setLineDash([6*Math.max(k,.5),6*Math.max(k,.5)]);
+    for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){const x=ox+i*s+s/2,y=oy+j*s+s/2;ctx.beginPath();ctx.moveTo(x,oy+j*s+pad);ctx.lineTo(x,oy+j*s+s-pad);ctx.moveTo(ox+i*s+pad,y);ctx.lineTo(ox+i*s+s-pad,y);ctx.stroke()}
+    ctx.setLineDash([]);
+  }
+}
+const bg=$('bg'), bc=bg.getContext('2d'), ink=$('ink'), ic=ink.getContext('2d');
+function sizeCanvases(){
+  const f=$('field'), d=devicePixelRatio||1, w=f.clientWidth, h=f.clientHeight;
+  const snap=ink.width?ic.getImageData(0,0,ink.width,ink.height):null;
+  for(const c of [bg,ink]){c.width=w*d;c.height=h*d;c.getContext('2d').setTransform(d,0,0,d,0,0)}
+  if(snap) ic.putImageData(snap,0,0);
+  drawGrid();
+}
+function drawGrid(){paintGrid(bc,bg.width/(devicePixelRatio||1),bg.height/(devicePixelRatio||1),S.grid)}
+
+/* ===== письмо ===== */
+let tool='pen', drawing=false, last=null;
+function pt(e){const r=ink.getBoundingClientRect();return{x:(e.clientX-r.left)/fit.s,y:(e.clientY-r.top)/fit.s,p:e.pressure||.5}}
+ink.addEventListener('pointerdown',e=>{exitEdit();drawing=true;last=pt(e);try{ink.setPointerCapture(e.pointerId)}catch{}});
+ink.addEventListener('pointermove',e=>{
+  if(!drawing)return; const p=pt(e);
+  ic.lineCap='round';ic.lineJoin='round';
+  if(tool==='pen'){ic.globalCompositeOperation='source-over';ic.strokeStyle=css('--label');ic.lineWidth=5+(e.pointerType==='pen'?p.p*6:2)}
+  else{ic.globalCompositeOperation='destination-out';ic.lineWidth=40}
+  ic.beginPath();ic.moveTo(last.x,last.y);ic.lineTo(p.x,p.y);ic.stroke();last=p;
+});
+addEventListener('pointerup',()=>drawing=false);
+
+/* ===== свободная зона ===== */
+const free=$('free'), MIN=56, MAX=180;
+const POS_DEF={circle:{x:52,y:150,s:96},tool:{x:52,y:290,s:96}};
+const pos=JSON.parse(JSON.stringify(POS_DEF));
+let editing=null;
+function place(el){const p=pos[el.dataset.key];el.style.left=p.x+'px';el.style.top=p.y+'px';el.style.width=el.style.height=p.s+'px'}
+function clamp(el){
+  const p=pos[el.dataset.key], fw=free.clientWidth, fh=free.clientHeight;
+  p.s=Math.max(MIN,Math.min(MAX,fw,p.s));
+  p.x=Math.max(0,Math.min(fw-p.s,p.x)); p.y=Math.max(0,Math.min(fh-p.s,p.y));
+  if(!app.classList.contains('left') && p.y<60 && p.x<56) p.y=60; // не на шестерёнку
+}
+function enterEdit(el){exitEdit();editing=el;el.classList.add('edit');free.classList.add('editing')}
+function exitEdit(){if(!editing)return;editing.classList.remove('edit','moving');free.classList.remove('editing');editing=null}
+$('done').onclick=exitEdit;
+free.addEventListener('pointerdown',e=>{if(e.target===free)exitEdit()});
+function setupFloat(el,onTap){
+  place(el);
+  let timer, start=null, orig, moved=false, mode=null;
+  const handle=el.querySelector('.handle');
+  handle.addEventListener('pointerdown',e=>{e.stopPropagation();try{handle.setPointerCapture(e.pointerId)}catch{};start={x:e.clientX,y:e.clientY};orig={...pos[el.dataset.key]};mode='resize'});
+  handle.addEventListener('pointermove',e=>{if(mode!=='resize')return;const d=Math.max(e.clientX-start.x,e.clientY-start.y)/fit.s;pos[el.dataset.key].s=orig.s+d;clamp(el);place(el)});
+  handle.addEventListener('pointerup',()=>{mode=null});
+  el.addEventListener('pointerdown',e=>{
+    if(e.target===handle)return;
+    try{el.setPointerCapture(e.pointerId)}catch{} start={x:e.clientX,y:e.clientY}; orig={...pos[el.dataset.key]}; moved=false;
+    if(editing===el){mode='move';el.classList.add('moving');return}
+    exitEdit(); el.classList.add('press'); mode=null;
+    timer=setTimeout(()=>{el.classList.remove('press');enterEdit(el);mode='move';el.classList.add('moving')},450);
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!start)return;
+    const dx=(e.clientX-start.x)/fit.s, dy=(e.clientY-start.y)/fit.s;
+    if(mode!=='move'){if(Math.hypot(dx,dy)>8){clearTimeout(timer);el.classList.remove('press');start=null}return}
+    const p=pos[el.dataset.key]; p.x=orig.x+dx; p.y=orig.y+dy; clamp(el); place(el); moved=true;
+  });
+  const end=()=>{clearTimeout(timer);el.classList.remove('press','moving');if(!mode&&start&&!moved)onTap&&onTap();start=null;mode=null};
+  el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
+}
+
+/* кружок ответа */
+const circle=$('circle');
+function render(){
+  if(!cur) return;
+  $('romaji').textContent=cur.r; $('answer').textContent=cur.k;
+  const ind=$('ind'), ch=cur.a==='h'?'あ':'ア';
+  if(ind.textContent!==ch){ind.style.transform='scale(.6)';ind.style.opacity=0;setTimeout(()=>{ind.textContent=ch;ind.style.transform='';ind.style.opacity=1},160)}
+}
+function advance(){
+  revealed=false; spAlpha=0; initSpoiler(); circle.classList.remove('full'); $('answer').classList.add('hidden');
+  ink.classList.add('clearing'); const r=$('romaji'); r.style.opacity=0;r.style.transform='translateY(-8px)';
+  setTimeout(()=>{ic.globalCompositeOperation='source-over';ic.clearRect(0,0,ink.width,ink.height);ink.classList.remove('clearing');nextWord();render();r.style.opacity=1;r.style.transform=''},330);
+}
+setupFloat(circle,()=>{
+  if(!revealed){revealed=true;circle.classList.add('full');$('answer').classList.remove('hidden')}
+  else advance();
+});
+
+/* кнопка инструмента */
+const ERASER='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M5 12h14"/></svg>';
+const PENCIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M8 22V12l4-9 4 9v10"/><path d="M8 12h8"/><path d="M10.6 6.2h2.8" stroke-width="2.6"/></svg>';
+let A=$('slotA'),B=$('slotB'); A.innerHTML=ERASER;
+setupFloat($('tool'),()=>{
+  tool=tool==='pen'?'eraser':'pen';
+  B.innerHTML=tool==='pen'?ERASER:PENCIL;
+  B.style.transition='none';B.className='slot in';B.offsetWidth;B.style.transition='';
+  A.className='slot out'; B.className='slot';
+  [A,B]=[B,A];
+});
+
+/* ===== стикеры (только свои картинки) ===== */
+let stickers=[], sid=0;
+function freeSpot(s){
+  const fw=free.clientWidth, fh=free.clientHeight, taken=Object.values(pos);
+  for(let y=fh-s-10;y>=60;y-=20) for(let x=(fw-s)/2;x>=0&&x<=fw-s;x+=999){
+    if(!taken.some(p=>x<p.x+p.s&&x+s>p.x&&y<p.y+p.s&&y+s>p.y)) return{x,y};
+  }
+  return{x:(fw-s)/2+(stickers.length%3)*12,y:fh-s-10-(stickers.length%3)*12};
+}
+function addSticker(src){
+  const key='st'+(++sid), s=96, sp=freeSpot(s);
+  pos[key]={x:sp.x,y:sp.y,s};
+  const el=document.createElement('div'); el.className='float sticker appear'; el.dataset.key=key;
+  el.innerHTML=`<img src="${src}" alt=""><div class="handle"></div>`;
+  free.insertBefore(el,$('done')); setupFloat(el);
+  stickers.push({key,src,el}); renderStickers();
+}
+function removeSticker(key){
+  const i=stickers.findIndex(s=>s.key===key); if(i<0)return;
+  stickers[i].el.remove(); delete pos[key]; stickers.splice(i,1); renderStickers();
+}
+function renderStickers(){
+  const list=$('stkList'); list.innerHTML='';
+  for(const s of stickers){
+    const d=document.createElement('div'); d.className='stk';
+    d.innerHTML=`<img src="${s.src}" alt=""><button class="x" aria-label="Удалить"><svg width="10" height="10" viewBox="0 0 10 10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>`;
+    d.querySelector('.x').onclick=()=>removeSticker(s.key);
+    list.appendChild(d);
+  }
+  const add=document.createElement('button'); add.className='stk add'; add.textContent='+'; add.title='Добавить из «Фото»';
+  add.onclick=()=>$('file').click(); list.appendChild(add);
+  $('stkEmpty').style.display=stickers.length?'none':'block';
+  $('delAll').disabled=!stickers.length;
+}
+$('file').onchange=e=>{const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>addSticker(r.result); r.readAsDataURL(f); e.target.value=''};
+$('delAll').onclick=()=>confirmBox('Удалить все стикеры?','Картинки исчезнут с главного экрана.','Удалить',()=>[...stickers].forEach(s=>removeSticker(s.key)));
+
+/* ===== экран настроек ===== */
+function openSettings(){exitEdit();renderSettings();$('scrim').classList.add('show');$('sheet').classList.add('show')}
+function closeSettings(){$('scrim').classList.remove('show');$('sheet').classList.remove('show')}
+$('gear').onclick=openSettings; $('ok').onclick=closeSettings; $('scrim').onclick=closeSettings;
+
+function segBind(id,key,apply){
+  $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=b.dataset.v;apply();renderSettings()});
+}
+function applyTheme(){root.dataset.theme=S.theme;drawGrid();renderGridOpts()}
+function applyHand(){app.classList.toggle('left',S.hand==='left');requestAnimationFrame(()=>{sizeCanvases();initSpoiler();document.querySelectorAll('.float').forEach(el=>{clamp(el);place(el)})})}
+segBind('segTheme','theme',applyTheme); segBind('segHand','hand',applyHand);
+
+function renderCats(a){
+  const box=$(a==='h'?'catsH':'catsK'); box.innerHTML='';
+  for(const [n,d,k] of CATS[a]){
+    // Basic — главный переключатель азбуки: без него остальные категории недоступны
+    const locked=n!=='Basic'&&!S[a].has('Basic');
+    const b=document.createElement('button'); b.className='cat'+(S[a].has(n)&&!locked?' on':'')+(locked?' locked':'');
+    b.innerHTML=`<span class="chk"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2l2.3 2.3 4.7-5"/></svg></span><span class="t"><div class="n">${n}</div><div class="d">${d}</div></span><span class="k">${k}</span>`;
+    b.onclick=()=>{
+      if(locked) return;
+      const other=a==='h'?'k':'h';
+      if(n==='Basic'&&S[a].has('Basic')&&!S[other].has('Basic')){ // последний Basic выключить нельзя
+        b.classList.remove('shake'); b.offsetWidth; b.classList.add('shake');
+        b.querySelector('.d').textContent='нужна хотя бы одна азбука';
+        setTimeout(()=>{b.querySelector('.d').textContent=d},1600);
+        return;
+      }
+      S[a].has(n)?S[a].delete(n):S[a].add(n);
+      renderCats(a);
+      if(cur&&!allowedWords().includes(cur)) advance(); // текущее слово стало недопустимым — сразу новое
+    };
+    box.appendChild(b);
+  }
+}
+function renderGridOpts(){
+  const box=$('grids'); box.innerHTML='';
+  for(const [v,label] of GRIDS){
+    const b=document.createElement('button'); b.className='gopt'+(S.grid===v?' on':'');
+    const c=document.createElement('canvas'); b.appendChild(c); b.append(label);
+    b.onclick=()=>{S.grid=v;drawGrid();renderGridOpts()};
+    box.appendChild(b);
+    requestAnimationFrame(()=>{const d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);paintGrid(x,w,h,v,.3)});
+  }
+}
+function renderSettings(){
+  $('segTheme').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.theme));
+  $('segHand').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.hand));
+  renderCats('h');renderCats('k');renderGridOpts();renderStickers();
+}
+$('reset').onclick=()=>confirmBox('Сбросить настройки?','Тема, кана, рука, разметка и места кнопок вернутся к исходным. Стикеры останутся.','Сбросить',()=>{
+  S={...JSON.parse(JSON.stringify(DEF)),h:new Set(DEF.h),k:new Set(DEF.k)};
+  Object.assign(pos,JSON.parse(JSON.stringify(POS_DEF))); place(circle); place($('tool'));
+  applyTheme(); applyHand(); renderSettings();
+  if(cur&&!allowedWords().includes(cur)) advance();
+});
+
+/* алерт как в iOS */
+function confirmBox(t,m,yes,cb){
+  $('aT').textContent=t;$('aM').textContent=m;$('aYes').textContent=yes;$('alertWrap').classList.add('show');
+  $('aNo').onclick=()=>$('alertWrap').classList.remove('show');
+  $('aYes').onclick=()=>{$('alertWrap').classList.remove('show');cb()};
+}
+
+document.fonts.ready.then(()=>{sizeCanvases();initSpoiler();drawSpoiler();nextWord();render();renderStickers()});
+</script>
+</body>
+</html>
